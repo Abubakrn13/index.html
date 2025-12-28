@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OROM FOOD</title>
+
+<style>
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f8fafc;
+--accent:#22c55e;
+}
+.light{
+--bg:#f1f5f9;
+--card:#ffffff;
+--text:#0f172a;
+--accent:#16a34a;
+}
+body{
+margin:0;font-family:Arial;
+background:var(--bg);color:var(--text);transition:.4s;
+}
+header{
+padding:25px;text-align:center;
+background:linear-gradient(135deg,#16a34a,#22c55e);
+color:white;
+}
+.toggle{
+position:fixed;top:15px;right:15px;
+background:#00000066;color:white;
+padding:8px 14px;border-radius:20px;
+cursor:pointer;z-index:10;
+}
+h2{padding:15px 20px;margin:0}
+
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:20px;padding:20px;
+}
+.card{
+background:var(--card);
+border-radius:18px;
+padding:15px;text-align:center;
+box-shadow:0 10px 30px #00000055;
+animation:fade .4s;
+}
+.card img{
+width:100%;height:140px;
+object-fit:cover;border-radius:14px;
+}
+.price{color:var(--accent);font-weight:bold}
+.controls{
+display:flex;justify-content:center;
+gap:10px;margin-top:10px;
+}
+button{
+background:var(--accent);
+border:none;color:white;
+font-size:18px;
+padding:6px 14px;
+border-radius:8px;cursor:pointer;
+}
+
+.cart{
+position:fixed;
+bottom:-260px;left:0;right:0;
+background:var(--card);
+padding:15px;
+box-shadow:0 -10px 25px #000;
+transition:.5s;
+}
+.cart.open{bottom:0}
+.cart-toggle{
+position:fixed;
+bottom:0;left:0;right:0;
+background:var(--accent);
+color:white;
+text-align:center;
+padding:10px;
+font-weight:bold;
+cursor:pointer;
+}
+@keyframes fade{
+from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:none}
+}
+
+.footer{
+margin-top:80px;
+padding:40px 20px;
+text-align:center;
+background:#020617;
+color:#e5e7eb;
+}
+.light .footer{
+background:#e5e7eb;
+color:#020617;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>OROM FOOD</h1>
+<p style="margin:6px 0;font-size:16px;opacity:.95">
+Ishonchli sifat , totli ta'm 
+</p>
+<p>📞 +998 94 923 49 00</p>
+</header>
+
+<div class="toggle" onclick="toggleMode()">🌙 / ☀️</div>
+
+<!-- MENYULAR -->
+<div id="content"></div>
+
+<div class="cart" id="cart">
+<h3>🛒 Savatcha</h3>
+<ul id="cartList"></ul>
+<p>Jami: <strong id="total">0</strong> so‘m</p>
+<button onclick="checkout()">Buyurtma berish</button>
+</div>
+
+<div class="cart-toggle" onclick="toggleCart()">🛒 Savatchani ochish / yopish</div>
+
+<script>
+const data=[
+{cat:"🥗 Salatlar",items:[
+["Achichuk",8000],["Suzma",7000],["Muzsalat",7000],
+["Bahor salati",8000],["Sabzavot salati",7000],
+["Oliviye",12000],["Gazak salat assorti",20000]
+]},
+{cat:"🍛 Asosiy taomlar",items:[
+["Osh (palov)",25000],["Lag'mon",22000],
+["Manti",24000],["Chuchvara",22000],
+["Norin",26000],["Dimlama",23000]
+]},
+{cat:"🍢 Kaboblar",items:[
+["Qo'y go'shti (yog'siz)",30000],["Qo'y go'shti (yog'li)",32000],
+["Mol go'shti (yog'siz)",32000],["Mol go'shti (yog'li)",34000],
+["Tovuqlik kabob",26000],["Jigar kabob",25000],
+["Qiyma kabob",27000]
+]},
+{cat:"🧀 Gazaklar",items:[
+["Non",4500],["Qazi",35000],
+["Kolbasa",18000],["Pishloq",15000],
+["Gazak assorti",30000]
+]},
+{cat:"🥤 Ichimliklar",items:[
+["Choy (ko'k)",10000],["Choy (qora)",10000],
+["Pepsi",12000],["Coca-Cola",12000],
+["Fanta",12000],["Sprite",12000],
+["Mineral suv",8000],["Kompot",10000],
+["Sharbat",12000],["Ayran",9000]
+]},
+{cat:"🍰 Shirinliklar",items:[
+["Shirinlik assorti",30000],["Mevalik assorti",28000],
+["Pahlava",15000],["Chizkeyk",20000],
+["Tort",25000],["Pechenye",12000],
+["Murabbo",10000]
+]}
+];
+
+let cart={};
+const content=document.getElementById("content");
+
+data.forEach(c=>{
+content.innerHTML+=`<h2>${c.cat}</h2><div class="menu">`+
+c.items.map(i=>`
+<div class="card">
+<img src="https://source.unsplash.com/400x300/?food,${i[0]}">
+<h3>${i[0]}</h3>
+<p class="price">${i[1]} so'm</p>
+<div class="controls">
+<button onclick="add('${i[0]}',${i[1]})">+</button>
+<button onclick="remove('${i[0]}')">-</button>
+</div>
+</div>`).join("")+
+`</div>`;
+});
+
+function add(n,p){cart[n]=(cart[n]||0)+1;update()}
+function remove(n){if(cart[n]){cart[n]--;if(cart[n]==0)delete cart[n]}update()}
+function update(){
+let list="",total=0;
+for(let k in cart){
+let p=[].concat(...data.map(d=>d.items)).find(i=>i[0]==k)[1];
+list+=`<li>${k} x ${cart[k]} = ${p*cart[k]} so'm</li>`;
+total+=p*cart[k];
+}
+cartList.innerHTML=list;
+totalElem.innerText=total;
+}
+const totalElem=document.getElementById("total");
+
+function toggleCart(){
+document.getElementById("cart").classList.toggle("open");
+}
+function checkout(){
+alert("CHEK:\n"+cartList.innerText+"\nJami: "+totalElem.innerText+" so'm");
+}
+function toggleMode(){
+document.body.classList.toggle("light");
+}
+</script>
+
+<footer class="footer">
+  <p><strong>OROM FOOD</strong> — Since 2025</p>
+  <p>Yaratuvchi: Mirzaev Abubakr (13 yosh)</p>
+  <p style="opacity:.7;font-size:13px">
+    Ushbu sayt yosh dasturchi tomonidan yaratilgan
+  </p>
+</footer>
+
+</body>
+</html>
